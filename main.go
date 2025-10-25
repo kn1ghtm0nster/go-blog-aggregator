@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"blog-aggregator/internal/commands"
 	"blog-aggregator/internal/config"
+	"blog-aggregator/internal/state"
 )
 
 func main() {
@@ -15,20 +18,34 @@ func main() {
 		log.Fatalf("Error reading config file: %v", err)
 	}
 
-	// set user to my actual name
-	err = configFile.SetUser("Diego")
-
-	if err != nil {
-		log.Fatalf("Error setting user in config file: %v", err)
+	programState := &state.State{
+		Config: &configFile,
 	}
 
-	// read config file again and print contents
-	cfg, err := config.Read()
+	cmds := &commands.Commands{}
+	cmds.Register("login", commands.HandlerLogin)
 
-	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+	// ensure we have at least one command line argument
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: gator <command> [args...]")
+		os.Exit(1)
 	}
 
-	fmt.Print(cfg.DBUrl, "\n")
-	fmt.Print(cfg.CurrentUserName, "\n")
+	cmdName := os.Args[1]
+	cmdArgs := []string{}
+
+	if len(os.Args) > 2 {
+		cmdArgs = os.Args[2:]
+	}
+
+	cmd := commands.Command{
+		Name: cmdName,
+		Args: cmdArgs,
+	}
+
+	err = cmds.Run(programState, cmd)
+
+	if err != nil {
+		log.Fatalf("Error running command: %v", err)
+	}
 }
