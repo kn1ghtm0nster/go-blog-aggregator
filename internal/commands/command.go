@@ -89,6 +89,26 @@ func HandlerResetUsers(s *state.State, cmd Command) error {
 	return nil
 }
 
+func HandlerGetUsers(s *state.State, cmd Command) error{
+	users, err := s.DB.GetUsers(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("failed to get users: %w", err)
+	}
+
+	currentUser := s.Config.CurrentUserName
+
+	for _, user := range users {
+		if user.Name == currentUser {
+			fmt.Printf("* %s (current)\n", user.Name)
+		} else {
+			fmt.Printf("* %s\n", user.Name)
+		}
+	}
+
+	return nil
+}
+
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
 

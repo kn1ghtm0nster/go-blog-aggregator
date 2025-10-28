@@ -41,6 +41,7 @@ func main() {
 	cmds.Register("login", commands.HandlerLogin)
 	cmds.Register("register", commands.HandlerRegister)
 	cmds.Register("reset", commands.HandlerResetUsers)
+	cmds.Register("users", commands.HandlerGetUsers)
 
 	// ensure we have at least one command line argument
 	if len(os.Args) < 2 {
