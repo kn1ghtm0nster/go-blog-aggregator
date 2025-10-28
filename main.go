@@ -1,12 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
+
 	"blog-aggregator/internal/commands"
 	"blog-aggregator/internal/config"
+	"blog-aggregator/internal/database"
 	"blog-aggregator/internal/state"
 )
 
@@ -18,12 +22,24 @@ func main() {
 		log.Fatalf("Error reading config file: %v", err)
 	}
 
+	// open database connection
+	db, err := sql.Open("postgres", configFile.DBUrl)
+
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+	defer db.Close()
+
+	dbQueries := database.New(db)
+
 	programState := &state.State{
+		DB:     dbQueries,
 		Config: &configFile,
 	}
 
 	cmds := &commands.Commands{}
 	cmds.Register("login", commands.HandlerLogin)
+	cmds.Register("register", commands.HandlerRegister)
 
 	// ensure we have at least one command line argument
 	if len(os.Args) < 2 {

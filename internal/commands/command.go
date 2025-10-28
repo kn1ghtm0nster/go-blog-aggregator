@@ -1,10 +1,16 @@
 package commands
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
+	"blog-aggregator/internal/database"
 	"blog-aggregator/internal/state"
+
+	"github.com/google/uuid"
 )
 
 type Command struct {
@@ -22,12 +28,51 @@ func HandlerLogin(s *state.State, cmd Command) error {
 	}
 
 	username := cmd.Args[0]
-	err := s.Config.SetUser(username)
+
+	_, err := s.DB.GetUserByName(context.Background(), username)
 	if err != nil {
-		return err
+		return fmt.Errorf("user %s does not exist", username)
+	}
+
+	if err := s.Config.SetUser(username); err != nil {
+		return fmt.Errorf("failed to set user %s: %w", username, err)
 	}
 
 	fmt.Printf("username set to %s\n", username)
+
+	return nil
+}
+
+func HandlerRegister(s *state.State, cmd Command) error {
+	if len(cmd.Args) == 0 {
+		return errors.New("username argument is required")
+	}
+
+	username := cmd.Args[0]
+	_, err := s.DB.GetUserByName(context.Background(), username)
+
+	if err == nil {
+		return fmt.Errorf("user %s already exists", username)
+	} else if err != sql.ErrNoRows {
+		return err
+	} else {
+		_, err := s.DB.CreateUser(context.Background(), database.CreateUserParams{
+			ID:        uuid.NewString(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Name:      username,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if err := s.Config.SetUser(username); err != nil {
+			return fmt.Errorf("failed to set user %s: %w", username, err)
+		}
+
+		fmt.Printf("user %s registered and set as current user\n", username)
+	}
 
 	return nil
 }
