@@ -77,6 +77,18 @@ func HandlerRegister(s *state.State, cmd Command) error {
 	return nil
 }
 
+func HandlerResetUsers(s *state.State, cmd Command) error {
+	err := s.DB.ResetUserTable(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("failed to reset users table: %w", err)
+	}
+
+	fmt.Println("users table reset successfully")
+
+	return nil
+}
+
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
 
