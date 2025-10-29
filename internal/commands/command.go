@@ -9,6 +9,7 @@ import (
 
 	"blog-aggregator/internal/database"
 	"blog-aggregator/internal/state"
+	"blog-aggregator/rss"
 
 	"github.com/google/uuid"
 )
@@ -108,6 +109,22 @@ func HandlerGetUsers(s *state.State, cmd Command) error{
 
 	return nil
 }
+
+func HandlerAgg(s *state.State, cmd Command) error {
+	feedURL := "https://www.wagslane.dev/index.xml"
+
+	feed, err := rss.FetchFeed(context.Background(), feedURL)
+	if err != nil {
+		return fmt.Errorf("failed to fetch feed: %w", err)
+	}
+
+	for _, item := range feed.Channel.Item {
+		fmt.Println(item)
+	}
+
+	return nil
+}
+
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
