@@ -43,6 +43,7 @@ func main() {
 	cmds.Register("reset", commands.HandlerResetUsers)
 	cmds.Register("users", commands.HandlerGetUsers)
 	cmds.Register("agg", commands.HandlerAgg)
+	cmds.Register("addfeed", commands.HandlerAddFeed)
 
 	// ensure we have at least one command line argument
 	if len(os.Args) < 2 {

@@ -125,6 +125,43 @@ func HandlerAgg(s *state.State, cmd Command) error {
 	return nil
 }
 
+func HandlerAddFeed(s *state.State, cmd Command) error {
+	currentLoggedInUser := s.Config.CurrentUserName
+
+	if len(cmd.Args) < 2 {
+		return errors.New("name and feed URL are required")
+	}
+
+	if currentLoggedInUser == "" {
+		return errors.New("no user is currently logged in")
+	}
+
+	user, err := s.DB.GetUserByName(context.Background(), currentLoggedInUser)
+	if err != nil {
+		return fmt.Errorf("failed to get user %s: %w", currentLoggedInUser, err)
+	}
+
+	feedName := cmd.Args[0]
+	feedURL := cmd.Args[1]
+
+	_, err = s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID:        uuid.NewString(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      feedName,
+		UserID:    user.ID,
+		Url:       feedURL,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to add feed %s for user %s: %w", feedURL, currentLoggedInUser, err)
+	}
+
+	fmt.Printf("feed %s added successfully!\n", feedName)
+
+	return nil
+}
+
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
