@@ -44,6 +44,7 @@ func main() {
 	cmds.Register("users", commands.HandlerGetUsers)
 	cmds.Register("agg", commands.HandlerAgg)
 	cmds.Register("addfeed", commands.HandlerAddFeed)
+	cmds.Register("feeds", commands.HandlerListFeeds)
 
 	// ensure we have at least one command line argument
 	if len(os.Args) < 2 {

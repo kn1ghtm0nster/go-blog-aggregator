@@ -162,6 +162,26 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
 	return nil
 }
 
+func HandlerListFeeds(s *state.State, cmd Command) error {
+	feeds, err := s.DB.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get feeds: %w", err)
+	}
+
+	for _, feed := range feeds {
+		username := "unknown"
+		if feed.UserName.Valid {
+			username = feed.UserName.String
+		}
+		fmt.Println("Feed Name: ", feed.Name)
+		fmt.Println("Feed URL: ", feed.Url)
+		fmt.Println("Author: ", username)
+		fmt.Println("-----")
+	}
+
+	return nil
+}
+
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
