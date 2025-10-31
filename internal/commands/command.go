@@ -182,6 +182,69 @@ func HandlerListFeeds(s *state.State, cmd Command) error {
 	return nil
 }
 
+func HandlerFollowFeed(s *state.State, cmd Command) error {
+	// takes a single url arg and creates a new feed follow record for the current user.
+
+	currentUser := s.Config.CurrentUserName
+
+	if currentUser == "" {
+		return errors.New("no user is currently logged in")
+	}
+
+	if len(cmd.Args) < 1 {
+		return errors.New("feed URL argument is required")
+	}
+
+	feedURL := cmd.Args[0]
+
+	user,  err := s.DB.GetUserByName(context.Background(), currentUser)
+	if err != nil {
+		return fmt.Errorf("failed to get user %s: %w", currentUser, err)
+	}
+
+	feed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
+	if err != nil {
+		return fmt.Errorf("failed to get feed by URL %s: %w", feedURL, err)
+	}
+
+	_, err = s.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.NewString(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create feed follow for user %s and feed %s: %w", currentUser, feedURL, err)
+	}
+
+	fmt.Printf("user %s is now following feed %s\n", currentUser, feedURL)
+
+	return nil
+}
+
+func HandlerListFollowedFeeds(s *state.State, cmd Command) error {
+	currentUser := s.Config.CurrentUserName
+	if currentUser == "" {
+		return errors.New("no user is currently logged in")
+	}
+
+	user, err := s.DB.GetUserByName(context.Background(), currentUser)
+	if err != nil {
+		return fmt.Errorf("failed to get user %s: %w", currentUser, err)
+	}
+
+	followedFeeds, err := s.DB.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get followed feeds for user %s: %w", currentUser, err)
+	}
+
+	for _, feed := range followedFeeds {
+		fmt.Println(feed.FeedName)
+	}
+
+	return nil
+}
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
