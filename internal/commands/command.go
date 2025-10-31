@@ -144,7 +144,7 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
 	feedName := cmd.Args[0]
 	feedURL := cmd.Args[1]
 
-	_, err = s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+	feed, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID:        uuid.NewString(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -155,6 +155,18 @@ func HandlerAddFeed(s *state.State, cmd Command) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to add feed %s for user %s: %w", feedURL, currentLoggedInUser, err)
+	}
+
+	_, err = s.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID: uuid.NewString(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to create feed follow for user %s and feed %s: %w", currentLoggedInUser, feedURL, err)
 	}
 
 	fmt.Printf("feed %s added successfully!\n", feedName)
