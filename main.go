@@ -11,6 +11,7 @@ import (
 	"blog-aggregator/internal/commands"
 	"blog-aggregator/internal/config"
 	"blog-aggregator/internal/database"
+	"blog-aggregator/internal/middleware"
 	"blog-aggregator/internal/state"
 )
 
@@ -43,10 +44,10 @@ func main() {
 	cmds.Register("reset", commands.HandlerResetUsers)
 	cmds.Register("users", commands.HandlerGetUsers)
 	cmds.Register("agg", commands.HandlerAgg)
-	cmds.Register("addfeed", commands.HandlerAddFeed)
+	cmds.Register("addfeed", middleware.MiddlewareLoggedIn(commands.HandlerAddFeed))
 	cmds.Register("feeds", commands.HandlerListFeeds)
-	cmds.Register("follow", commands.HandlerFollowFeed)
-	cmds.Register("following", commands.HandlerListFollowedFeeds)
+	cmds.Register("follow", middleware.MiddlewareLoggedIn(commands.HandlerFollowFeed))
+	cmds.Register("following", middleware.MiddlewareLoggedIn(commands.HandlerListFollowedFeeds))
 
 	// ensure we have at least one command line argument
 	if len(os.Args) < 2 {
