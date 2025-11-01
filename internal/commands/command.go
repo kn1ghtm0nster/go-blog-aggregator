@@ -228,6 +228,30 @@ func HandlerListFollowedFeeds(s *state.State, cmd Command, user database.User) e
 	return nil
 }
 
+func HandlerUnfollowFeed(s *state.State, cmd Command, user database.User) error {
+	if len(cmd.Args) < 1 {
+		return errors.New("feed URL argument is required")
+	}
+
+	feedURL := cmd.Args[0]
+
+	feed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
+	if err != nil {
+		return fmt.Errorf("failed to get feed by URL %s: %w", feedURL, err)
+	}
+
+	err = s.DB.UnfollowFeed(context.Background(), database.UnfollowFeedParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to unfollow feed %s for user %s: %w", feedURL, user.Name, err)
+	}
+
+	fmt.Println("feed unfollowed.")
+	return nil
+}
+
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
 
