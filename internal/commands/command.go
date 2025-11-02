@@ -9,7 +9,7 @@ import (
 
 	"blog-aggregator/internal/database"
 	"blog-aggregator/internal/state"
-	"blog-aggregator/rss"
+	"blog-aggregator/internal/utils"
 
 	"github.com/google/uuid"
 )
@@ -111,18 +111,28 @@ func HandlerGetUsers(s *state.State, cmd Command) error{
 }
 
 func HandlerAgg(s *state.State, cmd Command) error {
-	feedURL := "https://www.wagslane.dev/index.xml"
+	if len(cmd.Args) < 1 {
+		return errors.New("duration argument is required (e.g., '1m', '30s')")
+	}
 
-	feed, err := rss.FetchFeed(context.Background(), feedURL)
+	duration := cmd.Args[0]
+	timeBetweenRequests, err := time.ParseDuration(duration)
 	if err != nil {
-		return fmt.Errorf("failed to fetch feed: %w", err)
+		return fmt.Errorf("invalid duration format: %w", err)
 	}
 
-	for _, item := range feed.Channel.Item {
-		fmt.Println(item)
+	fmt.Printf("collecting feeds every %s\n", timeBetweenRequests)
+
+	ticker := time.NewTicker(timeBetweenRequests)
+	defer ticker.Stop()
+	for ; ; <-ticker.C {
+		err := utils.ScrapeFeeds(context.Background(), s.DB)
+		if err != nil {
+			fmt.Printf("error fetching feeds: %v\n", err)
+			// continue the loop instead of returning
+		}
 	}
 
-	return nil
 }
 
 func HandlerAddFeed(s *state.State, cmd Command, user database.User) error {
