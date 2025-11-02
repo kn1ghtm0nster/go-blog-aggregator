@@ -122,6 +122,7 @@ func HandlerAgg(s *state.State, cmd Command) error {
 	}
 
 	fmt.Printf("collecting feeds every %s\n", timeBetweenRequests)
+	fmt.Println()
 
 	ticker := time.NewTicker(timeBetweenRequests)
 	defer ticker.Stop()
