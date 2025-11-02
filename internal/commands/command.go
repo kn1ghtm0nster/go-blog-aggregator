@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"blog-aggregator/internal/database"
@@ -262,6 +263,38 @@ func HandlerUnfollowFeed(s *state.State, cmd Command, user database.User) error 
 	fmt.Println("feed unfollowed.")
 	return nil
 }
+
+func HandlerBrowse(s *state.State, cmd Command, user database.User) error {
+	limit := 2
+
+	if len(cmd.Args) > 0 {
+		parsedLimit, err := strconv.Atoi(cmd.Args[0])
+		if err != nil || parsedLimit <= 0 {
+			return fmt.Errorf("invalid limit value, please use a positive number")
+		}
+		limit = parsedLimit
+	}
+
+	posts, err := s.DB.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  int32(limit),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get posts for user %s: %w", user.Name, err)
+	}
+
+	for _, post := range posts {
+		fmt.Printf("Title: %s\n", post.Title.String)
+		fmt.Printf("URL: %s\n", post.Url)
+		if post.PublishedAt.Valid {
+			fmt.Printf("Published At: %s\n", post.PublishedAt.Time.Format(time.RFC1123))
+		}
+		fmt.Printf("Feed: %s\n", post.FeedName)
+		fmt.Println("-----")
+	}
+	return nil
+}
+
 
 func (c *Commands) Run(s *state.State, cmd Command) error {
 	// runs a given command with the proivided state IF it exists
