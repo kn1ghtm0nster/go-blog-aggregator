@@ -121,7 +121,7 @@ func HandlerAgg(s *state.State, cmd Command) error {
 		return fmt.Errorf("invalid duration format: %w", err)
 	}
 
-	fmt.Printf("collecting feeds every %s\n", timeBetweenRequests)
+	fmt.Printf("collecting feeds every %s\nPress Ctrl+C to stop gracefully...\n\n", timeBetweenRequests)
 	fmt.Println()
 
 	ticker := time.NewTicker(timeBetweenRequests)
